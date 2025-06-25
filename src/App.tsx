@@ -5,6 +5,7 @@ import { Typography } from '@alfalab/core-components/typography';
 import { AmountInput } from '@alfalab/core-components/amount-input';
 import { Divider } from '@alfalab/core-components/divider';
 import { Gap } from '@alfalab/core-components/gap';
+import { PopupSheet } from '@alfalab/core-components/popup-sheet';
 import { SliderInput } from '@alfalab/core-components/slider-input';
 import { Switch } from '@alfalab/core-components/switch';
 import { CheckmarkCircleSIcon } from '@alfalab/icons-glyph/CheckmarkCircleSIcon';
@@ -39,6 +40,7 @@ export const App = () => {
   const [isRealEstate, setIsRealEstate] = useState(false);
   const [step, setStep] = useState(0);
   const swiperRef = useRef<SwiperRef | null>(null);
+  const [openPop, setPop] = useState(false);
 
   const handleSumSliderChange = ({ value }: { value: number }) => {
     setAmount(value);
@@ -75,7 +77,12 @@ export const App = () => {
     sendDataToGA({
       sum_cred: amount.toFixed(2),
       srok_kredita: years,
-      platezh_mes: '0',
+      platezh_mes:
+        swiperPayment === 'Без залога'
+          ? calculateMonthlyPayment(0.339, 12, years * 12, amount).toFixed(2)
+          : swiperPayment === 'Авто'
+          ? calculateMonthlyPayment(0.27, 12, years * 12, amount).toFixed(2)
+          : calculateMonthlyPayment(0.2807, 12, years * 12, amount).toFixed(2),
       chosen_option: swiperPaymentToGa[swiperPayment],
     }).then(() => {
       LS.setItem(LSKeys.ShowThx, true);
@@ -215,7 +222,7 @@ export const App = () => {
               <Typography.Text tag="p" view="primary-small" defaultMargins={false} style={{ fontSize: '12px' }}>
                 Залог безопасен для вас
               </Typography.Text>
-              <div style={{ display: 'flex', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center' }} onClick={() => setPop(true)}>
                 <Typography.Text
                   tag="p"
                   view="primary-small"
@@ -602,6 +609,15 @@ export const App = () => {
           </ButtonMobile>
         </div>
       )}
+
+      <PopupSheet hasCloser swipeable open={openPop} onClose={() => setPop(false)}>
+        <div>
+          <Typography.Text view="primary-medium" weight="medium">
+            Залог улучшает условия по кредиту. Позволяет банку снизить риски при выдаче кредитов и выдать вам нужную сумму с
+            выгодной ставкой
+          </Typography.Text>
+        </div>
+      </PopupSheet>
     </>
   );
 };
