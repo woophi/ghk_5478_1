@@ -1,5 +1,3 @@
-import { LS, LSKeys } from '../ls';
-
 declare global {
   interface Window {
     dataLayer: unknown[];
@@ -7,15 +5,14 @@ declare global {
   }
 }
 
-type Payload = {
-  autopayments: 1 | 0;
-  limit: 1 | 0;
-  limit_sum: number;
-  insurance: 1 | 0;
-  email: 1 | 0;
+export type GaPayload = {
+  sum_cred: string;
+  srok_kredita: number;
+  platezh_mes: string;
+  chosen_option: 'auto' | 'property' | 'nothing';
 };
 
-export const sendDataToGA = async (payload: Payload) => {
+export const sendDataToGA = async (payload: GaPayload) => {
   try {
     const now = new Date();
     const date = `${now.getFullYear()}-${
@@ -23,11 +20,11 @@ export const sendDataToGA = async (payload: Payload) => {
     }-${now.getDate()} ${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`;
 
     await fetch(
-      'https://script.google.com/macros/s/AKfycbxcHgrbrpJDGqapkLM5baYBX40Q4CotD5cxxU-4_mdpm86bxbBXSESz1AkW_G-ubZWb/exec',
+      'https://script.google.com/macros/s/AKfycbzFTECGFLN3N4yaIl2kyw2bVhA8n6CAhVO7Bmd5dADzkxMwFndK1czki_Nv0ehNO3h6Eg/exec',
       {
         redirect: 'follow',
         method: 'POST',
-        body: JSON.stringify({ date, ...payload, variant: 'variant1', id: LS.getItem(LSKeys.UserId, 0) }),
+        body: JSON.stringify({ date, ...payload, variant: 'ghk_5478_2' }),
         headers: {
           'Content-Type': 'text/plain;charset=utf-8',
         },

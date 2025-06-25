@@ -6,7 +6,7 @@ body {
   font-family: 'Roboto', sans-serif;
   width: 100%;
   height: 100%;
-  background-color: #fff;
+  background-color: #F3F4F5;
   position: relative;
 }
 
@@ -17,3 +17,8 @@ body {
 [class^="slider__component_"] {
   width: calc(100% - var(--slider-input-progress-margin-horizontal) * 2) !important;
 }
+
+[class*="switch__checked_"] [class*="switch__switch_"] {
+  background-color: #ef3124 !important;
+}
+
