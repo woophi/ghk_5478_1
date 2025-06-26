@@ -29,18 +29,32 @@ const swiperPaymentToGa: Record<string, GaPayload['chosen_option']> = {
   Недвижимость: 'property',
 };
 
+const minMaxLoanBasedOnSelection: Record<string, { min: number; max: number }> = {
+  'Без залога': { min: 30_000, max: 7_500_000 },
+  Авто: { min: 30_000, max: 7_500_000 },
+  Недвижимость: { min: 500_000, max: 30_000_000 },
+};
+const minMaxPeriodBasedOnSelection: Record<string, { min: number; max: number }> = {
+  'Без залога': { min: 1, max: 5 },
+  Авто: { min: 1, max: 5 },
+  Недвижимость: { min: 1, max: 15 },
+};
+
 export const App = () => {
   const [loading, setLoading] = useState(false);
   const [thx, setThx] = useState(LS.getItem(LSKeys.ShowThx, false));
-  const [amount, setAmount] = useState(1_900_000);
-  const [years, setYears] = useState(1);
+  const [years, setYears] = useState(5);
   const [stringYears, setStringYears] = useState('до 1 года');
   const [isAutoChecked, setIsAutoChecked] = useState(false);
   const [swiperPayment, setSwiperPayment] = useState('Без залога');
+  const [amount, setAmount] = useState(minMaxLoanBasedOnSelection[swiperPayment].max);
   const [isRealEstate, setIsRealEstate] = useState(false);
   const [step, setStep] = useState(0);
   const swiperRef = useRef<SwiperRef | null>(null);
   const [openPop, setPop] = useState(false);
+
+  const { min: MIN_AMOUNT, max: MAX_AMOUNT } = minMaxLoanBasedOnSelection[swiperPayment];
+  const { min: MIN_YEARS, max: MAX_YEARS } = minMaxPeriodBasedOnSelection[swiperPayment];
 
   const handleSumSliderChange = ({ value }: { value: number }) => {
     setAmount(value);
@@ -90,6 +104,21 @@ export const App = () => {
       setLoading(false);
     });
   };
+
+  useEffect(() => {
+    if (years <= 1) {
+      setStringYears('до 1 года');
+    } else {
+      setStringYears(`до ${years} лет`);
+    }
+  }, []);
+
+  useEffect(() => {
+    const { max: maxAmount } = minMaxLoanBasedOnSelection['Авто'];
+    const { max: maxYears } = minMaxPeriodBasedOnSelection['Авто'];
+    handleSumSliderChange({ value: maxAmount });
+    handleYearsSliderChange({ value: maxYears });
+  }, [swiperPayment]);
 
   useEffect(() => {
     if (step === 1 || thx) {
@@ -144,13 +173,13 @@ export const App = () => {
               sliderValue={amount}
               onInputChange={handleSumInputChange}
               onSliderChange={handleSumSliderChange}
-              onBlur={() => setAmount(prev => clamp(prev, 50_000, 1_900_000))}
-              min={50_000}
-              max={1_900_000}
-              range={{ min: 50_000, max: 1_900_000 }}
+              onBlur={() => setAmount(prev => clamp(prev, MIN_AMOUNT, MAX_AMOUNT))}
+              min={MIN_AMOUNT}
+              max={MAX_AMOUNT}
+              range={{ min: MIN_AMOUNT, max: MAX_AMOUNT }}
               pips={{
                 mode: 'values',
-                values: [50_000, 1_900_000],
+                values: [MIN_AMOUNT, MAX_AMOUNT],
                 format: { to: formatPipsValue },
               }}
               step={1}
@@ -167,13 +196,13 @@ export const App = () => {
               sliderValue={years}
               onInputChange={handleYearsInputChange}
               onSliderChange={handleYearsSliderChange}
-              onBlur={() => setAmount(prev => clamp(prev, 1, 20))}
-              min={1}
-              max={20}
-              range={{ min: 1, max: 20 }}
+              onBlur={() => setAmount(prev => clamp(prev, MIN_YEARS, MAX_YEARS))}
+              min={MIN_YEARS}
+              max={MAX_YEARS}
+              range={{ min: MIN_YEARS, max: MAX_YEARS }}
               pips={{
                 mode: 'values',
-                values: [1, 20],
+                values: [MIN_YEARS, MAX_YEARS],
                 format: { to: formatPipsYearsValue },
               }}
               step={1}
