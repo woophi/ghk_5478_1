@@ -106,6 +106,15 @@ export const App = () => {
   };
 
   useEffect(() => {
+    if (swiperPayment === 'Авто' && !isAutoChecked) {
+      setSwiperPayment('Без залога');
+    }
+    if (swiperPayment === 'Недвижимость' && !isRealEstate) {
+      setSwiperPayment('Без залога');
+    }
+  }, [isAutoChecked, isRealEstate, swiperPayment]);
+
+  useEffect(() => {
     if (years <= 1) {
       setStringYears('до 1 года');
     } else {
