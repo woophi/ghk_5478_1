@@ -52,6 +52,7 @@ export const App = () => {
   const [step, setStep] = useState(0);
   const swiperRef = useRef<SwiperRef | null>(null);
   const [openPop, setPop] = useState(false);
+  const [disableProducts, setDisableProducts] = useState(false);
 
   const { min: MIN_AMOUNT, max: MAX_AMOUNT } = minMaxLoanBasedOnSelection[swiperPayment];
   const { min: MIN_YEARS, max: MAX_YEARS } = minMaxPeriodBasedOnSelection[swiperPayment];
@@ -123,11 +124,27 @@ export const App = () => {
   }, []);
 
   useEffect(() => {
-    const { max: maxAmount } = minMaxLoanBasedOnSelection['Авто'];
-    const { max: maxYears } = minMaxPeriodBasedOnSelection['Авто'];
+    const { max: maxAmount } = minMaxLoanBasedOnSelection[swiperPayment];
+    const { max: maxYears } = minMaxPeriodBasedOnSelection[swiperPayment];
     handleSumSliderChange({ value: maxAmount });
     handleYearsSliderChange({ value: maxYears });
   }, [swiperPayment]);
+
+  useEffect(() => {
+    setDisableProducts(years > 5);
+  }, [years]);
+
+  useEffect(() => {
+    if (isAutoChecked) {
+      setSwiperPayment('Авто');
+    }
+  }, [isAutoChecked]);
+
+  useEffect(() => {
+    if (isRealEstate) {
+      setSwiperPayment('Недвижимость');
+    }
+  }, [isRealEstate]);
 
   useEffect(() => {
     if (step === 1 || thx) {
@@ -280,72 +297,73 @@ export const App = () => {
           <Gap size={24} />
 
           <Swiper style={{ marginLeft: '1px', marginRight: '1px' }} spaceBetween={8} slidesPerView="auto">
-            <SwiperSlide onClick={() => setSwiperPayment('Без залога')} style={{ width: '170px' }}>
-              <Gap size={4} />
-              <div
-                className={appSt.sliderCard({
-                  selected: swiperPayment === 'Без залога',
-                })}
-              >
-                {swiperPayment === 'Без залога' && (
-                  <div className={appSt.sliderCardIcon}>
-                    <CheckmarkCircleSIcon />
-                  </div>
-                )}
-                <Typography.Text
-                  tag="p"
-                  view="primary-small"
-                  color={swiperPayment === 'Без залога' ? 'secondary-inverted' : 'secondary'}
-                  defaultMargins={false}
+            {!disableProducts && (
+              <SwiperSlide onClick={() => setSwiperPayment('Без залога')} style={{ width: '170px' }}>
+                <Gap size={4} />
+                <div
+                  className={appSt.sliderCard({
+                    selected: swiperPayment === 'Без залога',
+                  })}
                 >
-                  Платеж в месяц
-                </Typography.Text>
-                <Typography.Text
-                  tag="p"
-                  view="primary-large"
-                  defaultMargins={false}
-                  style={{
-                    color: swiperPayment === 'Без залога' ? 'white' : 'black',
-                  }}
-                >
-                  {calculateMonthlyPayment(0.339, 12, years * 12, amount).toLocaleString('ru-RU', {
-                    minimumFractionDigits: 0,
-                    maximumFractionDigits: 0,
-                  })}{' '}
-                  ₽
-                </Typography.Text>
-                <Gap size={12} />
-                <Typography.Text
-                  tag="p"
-                  view="primary-small"
-                  defaultMargins={false}
-                  color={swiperPayment === 'Без залога' ? 'secondary-inverted' : 'secondary'}
-                >
-                  {amount.toLocaleString('ru-RU', {
-                    minimumFractionDigits: 0,
-                    maximumFractionDigits: 0,
-                  })}{' '}
-                  ₽
-                </Typography.Text>
-                <Typography.Text
-                  tag="p"
-                  view="primary-small"
-                  color={swiperPayment === 'Без залога' ? 'secondary-inverted' : 'secondary'}
-                  defaultMargins={false}
-                >
-                  На 5 лет
-                </Typography.Text>
-                <Typography.Text
-                  tag="p"
-                  view="primary-small"
-                  color={swiperPayment === 'Без залога' ? 'secondary-inverted' : 'secondary'}
-                  defaultMargins={false}
-                >
-                  Без залога <br /> <br />
-                </Typography.Text>
-              </div>
-            </SwiperSlide>
-
+                  {swiperPayment === 'Без залога' && (
+                    <div className={appSt.sliderCardIcon}>
+                      <CheckmarkCircleSIcon />
+                    </div>
+                  )}
+                  <Typography.Text
+                    tag="p"
+                    view="primary-small"
+                    color={swiperPayment === 'Без залога' ? 'secondary-inverted' : 'secondary'}
+                    defaultMargins={false}
+                  >
+                    Платеж в месяц
+                  </Typography.Text>
+                  <Typography.Text
+                    tag="p"
+                    view="primary-large"
+                    defaultMargins={false}
+                    style={{
+                      color: swiperPayment === 'Без залога' ? 'white' : 'black',
+                    }}
+                  >
+                    {calculateMonthlyPayment(0.339, 12, years * 12, amount).toLocaleString('ru-RU', {
+                      minimumFractionDigits: 0,
+                      maximumFractionDigits: 0,
+                    })}{' '}
+                    ₽
+                  </Typography.Text>
+                  <Gap size={12} />
+                  <Typography.Text
+                    tag="p"
+                    view="primary-small"
+                    defaultMargins={false}
+                    color={swiperPayment === 'Без залога' ? 'secondary-inverted' : 'secondary'}
+                  >
+                    {amount.toLocaleString('ru-RU', {
+                      minimumFractionDigits: 0,
+                      maximumFractionDigits: 0,
+                    })}{' '}
+                    ₽
+                  </Typography.Text>
+                  <Typography.Text
+                    tag="p"
+                    view="primary-small"
+                    color={swiperPayment === 'Без залога' ? 'secondary-inverted' : 'secondary'}
+                    defaultMargins={false}
+                  >
+                    На 5 лет
+                  </Typography.Text>
+                  <Typography.Text
+                    tag="p"
+                    view="primary-small"
+                    color={swiperPayment === 'Без залога' ? 'secondary-inverted' : 'secondary'}
+                    defaultMargins={false}
+                  >
+                    Без залога <br /> <br />
+                  </Typography.Text>
+                </div>
+              </SwiperSlide>
+            )}
             {isRealEstate && (
               <SwiperSlide
                 onClick={() => setSwiperPayment('Недвижимость')}
@@ -420,7 +438,7 @@ export const App = () => {
               </SwiperSlide>
             )}
 
-            {isAutoChecked && (
+            {!disableProducts && isAutoChecked && (
               <SwiperSlide
                 onClick={() => setSwiperPayment('Авто')}
                 style={{
