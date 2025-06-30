@@ -135,14 +135,18 @@ export const App = () => {
   }, [years]);
 
   useEffect(() => {
-    if (isAutoChecked) {
+    if (isAutoChecked && !isRealEstate) {
       setSwiperPayment('Авто');
     }
-  }, [isAutoChecked]);
+  }, [isAutoChecked, isRealEstate]);
 
   useEffect(() => {
     if (isRealEstate) {
       setSwiperPayment('Недвижимость');
+      const { max: maxAmount } = minMaxLoanBasedOnSelection['Недвижимость'];
+      const { max: maxYears } = minMaxPeriodBasedOnSelection['Недвижимость'];
+      handleSumSliderChange({ value: maxAmount });
+      handleYearsSliderChange({ value: maxYears });
     }
   }, [isRealEstate]);
 
