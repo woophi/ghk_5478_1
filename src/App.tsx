@@ -16,6 +16,7 @@ import { LS, LSKeys } from './ls';
 import { appSt } from './style.css';
 import { ThxLayout } from './thx/ThxLayout';
 import { GaPayload, sendDataToGA } from './utils/events';
+import { getWordEnding } from './utils/words';
 
 function calculateMonthlyPayment(annualRate: number, periodsPerYear: number, totalPeriods: number, loanAmount: number) {
   const monthlyRate = annualRate / periodsPerYear;
@@ -44,7 +45,6 @@ export const App = () => {
   const [loading, setLoading] = useState(false);
   const [thx, setThx] = useState(LS.getItem(LSKeys.ShowThx, false));
   const [years, setYears] = useState(5);
-  const [stringYears, setStringYears] = useState('до 1 года');
   const [isAutoChecked, setIsAutoChecked] = useState(false);
   const [swiperPayment, setSwiperPayment] = useState('Без залога');
   const [amount, setAmount] = useState(minMaxLoanBasedOnSelection[swiperPayment].max);
@@ -63,12 +63,6 @@ export const App = () => {
 
   const handleYearsSliderChange = ({ value }: { value: number }) => {
     setYears(value);
-
-    if (value <= 1) {
-      setStringYears('до 1 года');
-    } else {
-      setStringYears(`до ${value} лет`);
-    }
   };
 
   const handleSumInputChange = (_: ChangeEvent<HTMLInputElement>, { value }: { value: number | string }) => {
@@ -116,21 +110,6 @@ export const App = () => {
   }, [isAutoChecked, isRealEstate, swiperPayment]);
 
   useEffect(() => {
-    if (years <= 1) {
-      setStringYears('до 1 года');
-    } else {
-      setStringYears(`до ${years} лет`);
-    }
-  }, []);
-
-  useEffect(() => {
-    const { max: maxAmount } = minMaxLoanBasedOnSelection[swiperPayment];
-    const { max: maxYears } = minMaxPeriodBasedOnSelection[swiperPayment];
-    handleSumSliderChange({ value: maxAmount });
-    handleYearsSliderChange({ value: maxYears });
-  }, [swiperPayment]);
-
-  useEffect(() => {
     setDisableProducts(years > 5);
   }, [years]);
 
@@ -143,12 +122,24 @@ export const App = () => {
   useEffect(() => {
     if (isRealEstate) {
       setSwiperPayment('Недвижимость');
-      const { max: maxAmount } = minMaxLoanBasedOnSelection['Недвижимость'];
-      const { max: maxYears } = minMaxPeriodBasedOnSelection['Недвижимость'];
+      const { min: minAmount } = minMaxLoanBasedOnSelection['Недвижимость'];
+      if (amount < minAmount) {
+        handleSumSliderChange({ value: minAmount });
+      }
+    }
+  }, [isRealEstate, amount]);
+
+  useEffect(() => {
+    const { max: maxAmount } = minMaxLoanBasedOnSelection[swiperPayment];
+    const { max: maxYears } = minMaxPeriodBasedOnSelection[swiperPayment];
+
+    if (amount > maxAmount) {
       handleSumSliderChange({ value: maxAmount });
+    }
+    if (years > maxYears) {
       handleYearsSliderChange({ value: maxYears });
     }
-  }, [isRealEstate]);
+  }, [swiperPayment]);
 
   useEffect(() => {
     if (step === 1 || thx) {
@@ -222,7 +213,7 @@ export const App = () => {
 
             <SliderInput
               block={true}
-              value={stringYears}
+              value={`до ${years} ${getWordEnding(years, ['года', 'лет', 'лет'])}`}
               sliderValue={years}
               onInputChange={handleYearsInputChange}
               onSliderChange={handleYearsSliderChange}
@@ -428,7 +419,7 @@ export const App = () => {
                     color={swiperPayment === 'Недвижимость' ? 'secondary-inverted' : 'secondary'}
                     defaultMargins={false}
                   >
-                    На {years} {years <= 1 ? 'год' : 'лет'}
+                    На {years} {getWordEnding(years, ['год', 'года', 'лет'])}
                   </Typography.Text>
                   <Typography.Text
                     tag="p"
@@ -502,7 +493,7 @@ export const App = () => {
                     color={swiperPayment === 'Авто' ? 'secondary-inverted' : 'secondary'}
                     defaultMargins={false}
                   >
-                    На {years} {years <= 1 ? 'год' : 'лет'}
+                    На {years} {getWordEnding(years, ['год', 'года', 'лет'])}
                   </Typography.Text>
                   <Typography.Text
                     tag="p"
