@@ -44,7 +44,6 @@ const minMaxPeriodBasedOnSelection: Record<string, { min: number; max: number }>
 export const App = () => {
   const [loading, setLoading] = useState(false);
   const [thx, setThx] = useState(LS.getItem(LSKeys.ShowThx, false));
-  const [years, setYears] = useState(5);
   const [isAutoChecked, setIsAutoChecked] = useState(false);
   const [swiperPayment, setSwiperPayment] = useState('Без залога');
   const [amount, setAmount] = useState(minMaxLoanBasedOnSelection[swiperPayment].max);
@@ -52,32 +51,18 @@ export const App = () => {
   const [step, setStep] = useState(0);
   const swiperRef = useRef<SwiperRef | null>(null);
   const [openPop, setPop] = useState(false);
-  const [disableProducts, setDisableProducts] = useState(false);
 
   const { min: MIN_AMOUNT, max: MAX_AMOUNT } = minMaxLoanBasedOnSelection[swiperPayment];
-  const { min: MIN_YEARS, max: MAX_YEARS } = minMaxPeriodBasedOnSelection[swiperPayment];
+  const { max: MAX_YEARS } = minMaxPeriodBasedOnSelection[swiperPayment];
 
   const handleSumSliderChange = ({ value }: { value: number }) => {
     setAmount(value);
   };
-
-  const handleYearsSliderChange = ({ value }: { value: number }) => {
-    setYears(value);
-  };
-
   const handleSumInputChange = (_: ChangeEvent<HTMLInputElement>, { value }: { value: number | string }) => {
     setAmount(Number(value) / 100);
   };
 
-  const handleYearsInputChange = (_: ChangeEvent<HTMLInputElement>, { value }: { value: number | string }) => {
-    setYears(Number(value) / 100);
-  };
-
   const formatPipsValue = (value: number) => `${value.toLocaleString('ru-RU')} ₽`;
-
-  const formatPipsYearsValue = (value: number) => {
-    return `${value.toLocaleString('ru-RU')} ${value <= 1 ? 'год' : 'лет'}`;
-  };
 
   const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
 
@@ -85,13 +70,13 @@ export const App = () => {
     setLoading(true);
     sendDataToGA({
       sum_cred: amount.toFixed(2),
-      srok_kredita: years,
+      srok_kredita: MAX_YEARS,
       platezh_mes:
         swiperPayment === 'Без залога'
-          ? calculateMonthlyPayment(0.339, 12, years * 12, amount).toFixed(2)
+          ? calculateMonthlyPayment(0.339, 12, MAX_YEARS * 12, amount).toFixed(2)
           : swiperPayment === 'Авто'
-          ? calculateMonthlyPayment(0.27, 12, years * 12, amount).toFixed(2)
-          : calculateMonthlyPayment(0.2807, 12, years * 12, amount).toFixed(2),
+          ? calculateMonthlyPayment(0.27, 12, MAX_YEARS * 12, amount).toFixed(2)
+          : calculateMonthlyPayment(0.2807, 12, MAX_YEARS * 12, amount).toFixed(2),
       chosen_option: swiperPaymentToGa[swiperPayment],
     }).then(() => {
       LS.setItem(LSKeys.ShowThx, true);
@@ -108,10 +93,6 @@ export const App = () => {
       setSwiperPayment('Без залога');
     }
   }, [isAutoChecked, isRealEstate, swiperPayment]);
-
-  useEffect(() => {
-    setDisableProducts(years > 5);
-  }, [years]);
 
   useEffect(() => {
     if (isAutoChecked && !isRealEstate) {
@@ -131,13 +112,9 @@ export const App = () => {
 
   useEffect(() => {
     const { max: maxAmount } = minMaxLoanBasedOnSelection[swiperPayment];
-    const { max: maxYears } = minMaxPeriodBasedOnSelection[swiperPayment];
 
     if (amount > maxAmount) {
       handleSumSliderChange({ value: maxAmount });
-    }
-    if (years > maxYears) {
-      handleYearsSliderChange({ value: maxYears });
     }
   }, [swiperPayment]);
 
@@ -211,28 +188,6 @@ export const App = () => {
 
             <Gap size={16} />
 
-            <SliderInput
-              block={true}
-              value={`до ${years} ${getWordEnding(years, ['года', 'лет', 'лет'])}`}
-              sliderValue={years}
-              onInputChange={handleYearsInputChange}
-              onSliderChange={handleYearsSliderChange}
-              onBlur={() => setAmount(prev => clamp(prev, MIN_YEARS, MAX_YEARS))}
-              min={MIN_YEARS}
-              max={MAX_YEARS}
-              range={{ min: MIN_YEARS, max: MAX_YEARS }}
-              pips={{
-                mode: 'values',
-                values: [MIN_YEARS, MAX_YEARS],
-                format: { to: formatPipsYearsValue },
-              }}
-              step={1}
-              labelView="outer"
-              size={48}
-            />
-
-            <Gap size={16} />
-
             <div className={appSt.sumContainer}>
               <div className={appSt.sumCard}>
                 <Switch
@@ -292,73 +247,76 @@ export const App = () => {
           <Gap size={24} />
 
           <Swiper style={{ marginLeft: '1px', marginRight: '1px' }} spaceBetween={8} slidesPerView="auto">
-            {!disableProducts && (
-              <SwiperSlide onClick={() => setSwiperPayment('Без залога')} style={{ width: '170px' }}>
-                <Gap size={4} />
-                <div
-                  className={appSt.sliderCard({
-                    selected: swiperPayment === 'Без залога',
-                  })}
+            <SwiperSlide onClick={() => setSwiperPayment('Без залога')} style={{ width: '170px' }}>
+              <Gap size={4} />
+              <div
+                className={appSt.sliderCard({
+                  selected: swiperPayment === 'Без залога',
+                })}
+              >
+                {swiperPayment === 'Без залога' && (
+                  <div className={appSt.sliderCardIcon}>
+                    <CheckmarkCircleSIcon />
+                  </div>
+                )}
+                <Typography.Text
+                  tag="p"
+                  view="primary-small"
+                  color={swiperPayment === 'Без залога' ? 'secondary-inverted' : 'secondary'}
+                  defaultMargins={false}
                 >
-                  {swiperPayment === 'Без залога' && (
-                    <div className={appSt.sliderCardIcon}>
-                      <CheckmarkCircleSIcon />
-                    </div>
-                  )}
-                  <Typography.Text
-                    tag="p"
-                    view="primary-small"
-                    color={swiperPayment === 'Без залога' ? 'secondary-inverted' : 'secondary'}
-                    defaultMargins={false}
-                  >
-                    Платеж в месяц
-                  </Typography.Text>
-                  <Typography.Text
-                    tag="p"
-                    view="primary-large"
-                    defaultMargins={false}
-                    style={{
-                      color: swiperPayment === 'Без залога' ? 'white' : 'black',
-                    }}
-                  >
-                    {calculateMonthlyPayment(0.339, 12, years * 12, amount).toLocaleString('ru-RU', {
-                      minimumFractionDigits: 0,
-                      maximumFractionDigits: 0,
-                    })}{' '}
-                    ₽
-                  </Typography.Text>
-                  <Gap size={12} />
-                  <Typography.Text
-                    tag="p"
-                    view="primary-small"
-                    defaultMargins={false}
-                    color={swiperPayment === 'Без залога' ? 'secondary-inverted' : 'secondary'}
-                  >
-                    {amount.toLocaleString('ru-RU', {
-                      minimumFractionDigits: 0,
-                      maximumFractionDigits: 0,
-                    })}{' '}
-                    ₽
-                  </Typography.Text>
-                  <Typography.Text
-                    tag="p"
-                    view="primary-small"
-                    color={swiperPayment === 'Без залога' ? 'secondary-inverted' : 'secondary'}
-                    defaultMargins={false}
-                  >
-                    На 5 лет
-                  </Typography.Text>
-                  <Typography.Text
-                    tag="p"
-                    view="primary-small"
-                    color={swiperPayment === 'Без залога' ? 'secondary-inverted' : 'secondary'}
-                    defaultMargins={false}
-                  >
-                    Без залога <br /> <br />
-                  </Typography.Text>
-                </div>
-              </SwiperSlide>
-            )}
+                  Платеж в месяц
+                </Typography.Text>
+                <Typography.Text
+                  tag="p"
+                  view="primary-large"
+                  defaultMargins={false}
+                  style={{
+                    color: swiperPayment === 'Без залога' ? 'white' : 'black',
+                  }}
+                >
+                  {calculateMonthlyPayment(
+                    0.339,
+                    12,
+                    minMaxPeriodBasedOnSelection['Без залога'].max * 12,
+                    amount,
+                  ).toLocaleString('ru-RU', {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0,
+                  })}{' '}
+                  ₽
+                </Typography.Text>
+                <Gap size={12} />
+                <Typography.Text
+                  tag="p"
+                  view="primary-small"
+                  defaultMargins={false}
+                  color={swiperPayment === 'Без залога' ? 'secondary-inverted' : 'secondary'}
+                >
+                  {amount.toLocaleString('ru-RU', {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0,
+                  })}{' '}
+                  ₽
+                </Typography.Text>
+                <Typography.Text
+                  tag="p"
+                  view="primary-small"
+                  color={swiperPayment === 'Без залога' ? 'secondary-inverted' : 'secondary'}
+                  defaultMargins={false}
+                >
+                  На 5 лет
+                </Typography.Text>
+                <Typography.Text
+                  tag="p"
+                  view="primary-small"
+                  color={swiperPayment === 'Без залога' ? 'secondary-inverted' : 'secondary'}
+                  defaultMargins={false}
+                >
+                  Без залога <br /> <br />
+                </Typography.Text>
+              </div>
+            </SwiperSlide>
             {isRealEstate && (
               <SwiperSlide
                 onClick={() => setSwiperPayment('Недвижимость')}
@@ -394,7 +352,12 @@ export const App = () => {
                       color: swiperPayment === 'Недвижимость' ? 'white' : 'black',
                     }}
                   >
-                    {calculateMonthlyPayment(0.2807, 12, years * 12, amount).toLocaleString('ru-RU', {
+                    {calculateMonthlyPayment(
+                      0.2807,
+                      12,
+                      minMaxPeriodBasedOnSelection['Недвижимость'].max * 12,
+                      amount,
+                    ).toLocaleString('ru-RU', {
                       minimumFractionDigits: 0,
                       maximumFractionDigits: 0,
                     })}{' '}
@@ -419,7 +382,8 @@ export const App = () => {
                     color={swiperPayment === 'Недвижимость' ? 'secondary-inverted' : 'secondary'}
                     defaultMargins={false}
                   >
-                    На {years} {getWordEnding(years, ['год', 'года', 'лет'])}
+                    На {minMaxPeriodBasedOnSelection['Недвижимость'].max}{' '}
+                    {getWordEnding(minMaxPeriodBasedOnSelection['Недвижимость'].max, ['год', 'года', 'лет'])}
                   </Typography.Text>
                   <Typography.Text
                     tag="p"
@@ -433,7 +397,7 @@ export const App = () => {
               </SwiperSlide>
             )}
 
-            {!disableProducts && isAutoChecked && (
+            {isAutoChecked && (
               <SwiperSlide
                 onClick={() => setSwiperPayment('Авто')}
                 style={{
@@ -468,10 +432,13 @@ export const App = () => {
                       color: swiperPayment === 'Авто' ? 'white' : 'black',
                     }}
                   >
-                    {calculateMonthlyPayment(0.27, 12, years * 12, amount).toLocaleString('ru-RU', {
-                      minimumFractionDigits: 0,
-                      maximumFractionDigits: 0,
-                    })}{' '}
+                    {calculateMonthlyPayment(0.27, 12, minMaxPeriodBasedOnSelection['Авто'].max * 12, amount).toLocaleString(
+                      'ru-RU',
+                      {
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0,
+                      },
+                    )}{' '}
                     ₽
                   </Typography.Text>
                   <Gap size={12} />
@@ -493,7 +460,8 @@ export const App = () => {
                     color={swiperPayment === 'Авто' ? 'secondary-inverted' : 'secondary'}
                     defaultMargins={false}
                   >
-                    На {years} {getWordEnding(years, ['год', 'года', 'лет'])}
+                    На {minMaxPeriodBasedOnSelection['Авто'].max}{' '}
+                    {getWordEnding(minMaxPeriodBasedOnSelection['Авто'].max, ['год', 'года', 'лет'])}
                   </Typography.Text>
                   <Typography.Text
                     tag="p"
@@ -575,8 +543,7 @@ export const App = () => {
             <Divider className={appSt.divider} />
             <div className={appSt.sumCard} style={{ borderRadius: 0, marginTop: '-1px' }}>
               <Typography.Text tag="p" view="primary-large" weight="bold" defaultMargins={false}>
-                На {years} {years === 1 && 'год'} {years <= 4 && years > 1 && 'года'}
-                {years > 4 && 'лет'}
+                На {MAX_YEARS} лет
               </Typography.Text>
               <Typography.Text tag="p" view="primary-small" color="secondary" defaultMargins={false}>
                 Срок кредита
@@ -586,7 +553,12 @@ export const App = () => {
             <div className={appSt.sumCard} style={{ borderRadius: 0, marginTop: '-1px' }}>
               {swiperPayment === 'Без залога' && (
                 <Typography.Text tag="p" view="primary-large" weight="bold" defaultMargins={false}>
-                  {calculateMonthlyPayment(0.339, 12, years * 12, amount).toLocaleString('ru-RU', {
+                  {calculateMonthlyPayment(
+                    0.339,
+                    12,
+                    minMaxPeriodBasedOnSelection['Без залога'].max * 12,
+                    amount,
+                  ).toLocaleString('ru-RU', {
                     minimumFractionDigits: 0,
                     maximumFractionDigits: 0,
                   })}{' '}
@@ -596,17 +568,25 @@ export const App = () => {
 
               {swiperPayment === 'Авто' && (
                 <Typography.Text tag="p" view="primary-large" weight="bold" defaultMargins={false}>
-                  {calculateMonthlyPayment(0.27, 12, years * 12, amount).toLocaleString('ru-RU', {
-                    minimumFractionDigits: 0,
-                    maximumFractionDigits: 0,
-                  })}{' '}
+                  {calculateMonthlyPayment(0.27, 12, minMaxPeriodBasedOnSelection['Авто'].max * 12, amount).toLocaleString(
+                    'ru-RU',
+                    {
+                      minimumFractionDigits: 0,
+                      maximumFractionDigits: 0,
+                    },
+                  )}{' '}
                   ₽
                 </Typography.Text>
               )}
 
               {swiperPayment === 'Недвижимость' && (
                 <Typography.Text tag="p" view="primary-large" weight="bold" defaultMargins={false}>
-                  {calculateMonthlyPayment(0.2807, 12, years * 12, amount).toLocaleString('ru-RU', {
+                  {calculateMonthlyPayment(
+                    0.2807,
+                    12,
+                    minMaxPeriodBasedOnSelection['Недвижимость'].max * 12,
+                    amount,
+                  ).toLocaleString('ru-RU', {
                     minimumFractionDigits: 0,
                     maximumFractionDigits: 0,
                   })}{' '}
