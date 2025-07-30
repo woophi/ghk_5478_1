@@ -46,7 +46,7 @@ export const App = () => {
   const [thx, setThx] = useState(LS.getItem(LSKeys.ShowThx, false));
   const [isAutoChecked, setIsAutoChecked] = useState(false);
   const [swiperPayment, setSwiperPayment] = useState('Без залога');
-  const [amount, setAmount] = useState(minMaxLoanBasedOnSelection[swiperPayment].max);
+  const [amount, setAmount] = useState(1_000_000);
   const [isRealEstate, setIsRealEstate] = useState(false);
   const [step, setStep] = useState(0);
   const swiperRef = useRef<SwiperRef | null>(null);
@@ -195,7 +195,7 @@ export const App = () => {
                   block={true}
                   reversed={true}
                   checked={isAutoChecked}
-                  label="Оставить авто в залог"
+                  label="Авто в залог"
                   onChange={() => setIsAutoChecked(prevState => !prevState)}
                 />
               </div>
@@ -215,7 +215,7 @@ export const App = () => {
                   block={true}
                   reversed={true}
                   checked={isRealEstate}
-                  label="Оставить недвижимость в залог"
+                  label="Недвижимость в залог"
                   onChange={() => setIsRealEstate(prevState => !prevState)}
                 />
               </div>
